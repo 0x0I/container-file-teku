@@ -2,7 +2,7 @@ ARG build_version="openjdk:17.0.1-slim-buster"
 ARG teku_version=21.10.1
 ARG build_type="source"
 
-# ******* Stage: builder ******* #
+# ******* Stage: source builder ******* #
 FROM ${build_version} as builder-source
 
 ARG teku_version
@@ -15,6 +15,7 @@ RUN git clone --depth 1 --branch ${teku_version} https://github.com/Consensys/te
 RUN cd teku && ./gradlew distTar installDist
 RUN mkdir /install && cp -r /tmp/teku/build/install/teku/* /install
 
+# ******* Stage: package builder ******* #
 FROM ${build_version} as builder-package
 
 ARG teku_version
@@ -26,6 +27,7 @@ RUN mkdir /install && curl -L https://artifacts.consensys.net/public/teku/raw/na
 
 FROM builder-${build_type} as build-condition
 
+# ******* Stage: base ******* #
 FROM ${build_version} as base
 
 COPY --from=build-condition /install /usr/local/teku
