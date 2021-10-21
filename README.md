@@ -1,14 +1,14 @@
 <p><img src="https://avatars1.githubusercontent.com/u/12563465?s=200&v=4" alt="OCI logo" title="oci" align="left" height="70" /></p>
-<p><img src="https://prysmaticlabs.com/assets/PrysmStripe.png" alt="Prysm logo" title="prysm" align="right" height="60" /></p>
+<p><img src="https://pbs.twimg.com/profile_images/1324063968877563907/n-NYkVty.png" alt="teku logo" title="teku" align="right" height="80" /></p>
 
-Container File :stars: :link: Prysm
+Container File 🔰:link: Teku
 =========
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/0x0I/container-file-prysm?color=yellow)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/0x0I/container-file-template?color=yellow)
 [![0x0I](https://circleci.com/gh/0x0I/container-file-demo.svg?style=svg)](https://circleci.com/gh/0x0I/container-file-demo)
 [![Docker Pulls](https://img.shields.io/docker/pulls/0labs/demo?style=flat)](https://hub.docker.com/repository/docker/0labs/demo)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blueviolet.svg)](https://opensource.org/licenses/MIT)
 
-Configure and operate Prysm: A full-featured client for the Ethereum 2.0 protocol, written in Go
+Configure and operate Teku: an open-source Ethereum 2.0 client written in Java
 
 **Overview**
   - [Setup](#setup)
