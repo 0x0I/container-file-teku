@@ -1,12 +1,12 @@
-# Prysm :cloud: Compose
+# Teku :cloud: Compose
 
 :octocat: Custom configuration of this deployment composition can be provided by setting environment variables of the operation environment explicitly:
 
-`export image=0labs/prysm:v2.0.0`
+`export image=0labs/teku:v21.10.1`
 
 or included within an environment config file located either at a `.beacon.env or .validator.env` file within the same directory or specified via one of the role type `env_vars` environment variables.
 
-`export beacon_env_vars=/home/user/prysm/beacon.env`
+`export beacon_env_vars=/home/user/teku/beacon.env`
 
 ## Config
 
@@ -18,50 +18,52 @@ or included within an environment config file located either at a `.beacon.env o
 
 | var | description | default |
 | --- | :---: | :---: |
-| *image* | Prysm client container image to deploy | `0labs/prysm:latest` |
-| *PRYSM_CONFIG_DIR* | configuration directory path within container | `/etc/prysm` |
-| *p2p_tcp_port* | peer-to-peer network communication and listening port | `13000` |
-| *p2p_udp_port* | peer-to-peer network discovery port | `12000` |
-| *eth2_api_port* | Ethereum 2.0 RESTful HTTP API listening port | `3501` |
-| *beacon_rpc_port* | RPC port exposed by a beacon node | `4000` |
-| *beacon_metrics_port* | port used to listen and respond to metrics requests for prometheus | `8080` |
-| *validator_gateway_port* | gRPC gateway for JSON requests | `7500` |
-| *validator_rpc_port* | RPC port exposed by a validator client | `7000` |
-| *validator_metrics_port* | port used to listen and respond to metrics requests for prometheus | `8081` |
-| *host_data_dir* | host directory to store node runtime/operational data | `/var/tmp/prysm` |
-| *host_wallet_dir* | host directory to store node account wallets | `/var/tmp/prysm/wallets` |
-| *host_keys_dir* | host directory to store node account keys | `/var/tmp/prysm/keys` |
-| *beacon_env_vars* | path to environment file to load by compose Beacon node container (see [list](https://docs.prylabs.network/docs/prysm-usage/parameters/#beacon-node-configuration) of available config options) | `.beacon.env` |
-| *validator_env_vars* | Path to environment file to load by compose Validator container (see [list](https://docs.prylabs.network/docs/prysm-usage/parameters/#validator-configuration) of available config options | `.validator.env` |
+| *image* | Teku client container image to deploy | `0labs/teku:latest` |
+| *TEKU_CONFIG_DIR* | configuration directory path within container | `/etc/teku` |
+| *p2p_tcp_port* | peer-to-peer network communication and listening port | `9000` |
+| *p2p_udp_port* | peer-to-peer network discovery port | `9000` |
+| *beacon_api_port* | HTTP API port exposed by a beacon node | `5051` |
+| *beacon_metrics_port* | port used to listen and respond to metrics requests for prometheus | `8008` |
+| *validator_metrics_port* | port used to listen and respond to metrics requests for prometheus | `8009` |
+| *host_data_dir* | host directory to store node runtime/operational data | `/var/tmp/teku` |
+| *host_wallet_dir* | host directory to store node account wallets | `/var/tmp/teku/wallets` |
+| *host_keys_dir* | host directory to store node account keys | `/var/tmp/teku/keys` |
+| *beacon_env_vars* | path to environment file to load by compose Beacon node container (see [list](https://docs.teku.consensys.net/en/latest/Reference/CLI/CLI-Syntax/) of available config options) | `.beacon.env` |
+| *validator_env_vars* | Path to environment file to load by compose Validator container (see [list](https://docs.teku.consensys.net/en/latest/Reference/CLI/Subcommands/Validator-Client/) of available config options | `.validator.env` |
 | *restart_policy* | container restart policy | `unless-stopped` |
 
 ## Deploy examples
 
-* Enable automatic acceptance of the terms of use when launching either a beacon-chain or validator node:
+* Launch a Teku beacon-chain node connected to the Pyrmont Ethereum 2.0 testnet using a Goerli web3 Ethereum endpoint:
 ```
 # cat .beacon.env
-CONFIG_accept-terms-of-use=true
+TEKU_ETH1_ENDPOINT=http://ethereum-rpc.goerli.01labs.net:8545
+CONFIG_network=pyrmont
 
-docker-compose up
-```
-
-* Launch a Prysm beacon-chain node connected to the Pyrmont Ethereum 2.0 testnet using a Goerli web3 Ethereum provider:
-```
-# cat .beacon.env
-CONFIG_http-web3provider=http://ethereum-rpc.goerli.01labs.net:8545
-CONFIG_pyrmont=true
-
-docker-compose up beacon-node
+docker-compose up teku-beacon
 ```
 
 * Customize the deploy container image and host + container node data directory:
 ```
 # cat .beacon.env
-image=0labs/prysm:v2.0.0
+image=0labs/teku:v21.10.1
 host_data_dir=/my/host/data
-CONFIG_datadir=/container/data/dir
+CONFIG_data-path=/container/data/dir
 
 docker-compose up
+```
+
+* Enable and expose beacon node HTTP API and metrics server on all interfaces:
+```
+# cat .beacon.env
+CONFIG_rest-api-enabled=true
+CONFIG_rest-api-interface=0.0.0.0
+CONFIG_rest-api-host-allowlist=*
+CONFIG_metrics-enabled=true
+CONFIG_metrics-interface=0.0.0.0
+CONFIG_metrics-host-allowlist=*
+
+docker-compose up teku-beacon
 ```
 
 * Install Eth2 deposit CLI tool and automatically setup multiple validator accounts/keys to register on the Pyrmont testnet:
@@ -74,15 +76,15 @@ DEPOSIT_NUM_VALIDATORS=3
 ETH2_CHAIN=pyrmont
 DEPOSIT_KEY_PASSWORD=ABCabc123!@#$
 
-docker-compose up beacon-node
+docker-compose up teku-beacon
 ```
 
-* Setup automatic cron backups of a localhost beacon-chain node DB every 12 hours (or twice a day):
+* Connect teku validator client to custom beacon chain node and set validator graffiti:
 ```
-# cat .beacon.env
-AUTO_BACKUP_DB=true
-BACKUP_HOST_ADDR=http://localhost:8080
-BACKUP_INTERVAL=0 */12 * * *
+# cat .validator.env
+CONFIG_network=mainnet
+CONFIG_beacon-node-api-endpoint=http://teku.mainnet.01labs.net:5051
+CONFIG_validators-graffiti=O1
 
-docker-compose up
+docker-compose up teku-validator
 ```

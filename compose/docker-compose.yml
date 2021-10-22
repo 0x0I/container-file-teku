@@ -4,48 +4,46 @@ networks:
   ethereum:
 
 services:
-  beacon-node:
-    image: ${image:-0labs/prysm:latest}
-    container_name: prysm-beacon
+  teku-beacon:
+    image: ${image:-0labs/teku:latest}
+    container_name: teku-beacon
     command:
-      - "beacon-chain"
+      - "teku"
       - "--config-file"
-      - "${PRYSM_CONFIG_DIR:-/etc/prysm}/config.yml"
+      - "${TEKU_CONFIG_DIR:-/etc/teku}/config.yml"
     environment:
-      PRYSM_CONFIG_DIR:
+      TEKU_CONFIG_DIR:
     env_file:
       - ${beacon_env_vars:-.beacon.env}
     ports:
-      - ${p2p_tcp_port:-13000}:13000/tcp
-      - ${p2p_udp_port:-12000}:12000/tcp
-      - ${eth2_api_port:-3501}:3501/tcp
-      - ${beacon_rpc_port:-4000}:4000/tcp
-      - ${beacon_metrics_port:-8080}:8080/tcp
+      - ${p2p_tcp_port:-9000}:9000/tcp
+      - ${p2p_udp_port:-9000}:9000/udp
+      - ${beacon_api_port:-5051}:5051/tcp
+      - ${beacon_metrics_port:-8008}:8008/tcp
     volumes:
-      - "${host_data_dir:-/var/tmp/prysm}:${CONFIG_datadir:-/root/.eth2}"
+      - "${host_data_dir:-/var/tmp/teku}:${CONFIG_datadir:-/root/.local/share/teku}"
     networks:
       - ethereum
     restart: ${restart_policy:-unless-stopped}
 
-  validator:
-    image: ${image:-0labs/prysm:latest}
-    container_name: prysm-validator
+  teku-validator:
+    image: ${image:-0labs/teku:latest}
+    container_name: teku-validator
     command:
-      - "validator"
+      - "teku"
+      - "validator-client"
       - "--config-file"
-      - "${PRYSM_CONFIG_DIR:-/etc/prysm}/config.yml"
+      - "${TEKU_CONFIG_DIR:-/etc/teku}/config.yml"
     environment:
       PRYSM_CONFIG_DIR:
     env_file:
       - ${validator_env_vars:-.validator.env}
     ports:
-      - ${validator_gateway_port:-7500}:7500/tcp
-      - ${validator_rpc_port:-7000}:7000/tcp
-      - ${validator_metrics_port:-8081}:8081/tcp
+      - ${validator_metrics_port:-8009}:8008/tcp
     volumes:
-      - "${host_data_dir:-/var/tmp/prysm}:${CONFIG_datadir:-/root/.eth2}"
-      - "${host_wallet_dir:-/var/tmp/prysm/wallets}:/wallets"
-      - "${host_keys_dir:-/var/tmp/prysm/keys}:/keys"
+      - "${host_data_dir:-/var/tmp/teku}:${CONFIG_datadir:-/root/.local/share/teku}"
+      - "${host_wallet_dir:-/var/tmp/teku/wallets}:/wallets"
+      - "${host_keys_dir:-/var/tmp/teku/keys}:/keys"
     networks:
       - ethereum
     restart: ${restart_policy:-unless-stopped}
