@@ -32,10 +32,9 @@ Guidelines on running service containers are available and organized according t
 
 | Name  | description |
 | ------------- | ------------- |
-| `builder` | image state following build of prysm binary/artifacts |
+| `builder` | image state following build of teku binary/artifacts |
 | `test` | image containing test tools, functional test cases for validation and `release` target contents |
 | `release` | minimal resultant image containing service binaries, entrypoints and helper scripts |
-| `tool` | setup consisting of all prysm utilities, helper tooling and `release` target contents |
 
 ```bash
 docker build --target <target> -t <tag> .
@@ -43,66 +42,66 @@ docker build --target <target> -t <tag> .
 
 #### Config
 
-:page_with_curl: Configuration of the `prysm` client can be expressed in a config file written in [YAML](https://yaml.org/), a minimal markup format, used as an alternative to passing command-line flags at runtime. Guidance on and a list of configurable settings can be found [here](https://docs.prylabs.network/docs/prysm-usage/parameters/#loading-parameters-via-a-yaml-file).
+:page_with_curl: Configuration of the `teku` client can be expressed in a config file written in [YAML](https://yaml.org/), a minimal markup format, used as an alternative to passing command-line flags at runtime or expressed by exposing environment variables exported explicitly (**i.e.** `export TEKU_NETWORK=mainnet`) or sourced from an environment var file to its runtime. Guidance on and a list of configurable settings can be found [here](https://docs.teku.consensys.net/en/latest/Reference/CLI/CLI-Syntax/#specifying-options).
 
-_The following variables can be customized to manage the location and content of this YAML configuration:_
+_The following variables can be customized to manage the location and content of this YAML configuration as well as the set of variables included within the client's runtime environment:_
 
-`$PRYSM_CONFIG_DIR=</path/to/configuration/dir>` (**default**: `/etc/prysm`)
-- container path where the `prysm` YAML configuration should be maintained
+`$TEKU_CONFIG_DIR=</path/to/configuration/dir>` (**default**: `/etc/teku`)
+- container path where the `teku` YAML configuration should be maintained
 
   ```bash
-  PRYSM_CONFIG_DIR=/mnt/etc/geth
+  TEKU_CONFIG_DIR=/mnt/etc/teku
   ```
 
 `$CONFIG_<setting> = <value (string)>` **default**: *None*
 
-- Any configuration setting/value key-pair supported by `prysm` should be expressible and properly rendered within the associated YAML config.
+- Any configuration setting/value key-pair supported by `teku` should be expressible and properly rendered within the associated YAML config.
 
     `<setting>` -- represents a YAML config setting:
     ```bash
-    # [YAML Setting 'pyrmont']
-    CONFIG_pyrmont=<value>
+    # [YAML Setting 'matrics-enabled']
+    CONFIG_metrics-enabled=<value>
     ```
 
     `<value>` -- represents setting value to configure:
     ```bash
-    # [YAML Setting 'pyrmont']
-    # Setting: pyrmont
+    # [YAML Setting 'metrics-enabled']
+    # Setting: metrics-enabled
     # Value: true
-    CONFIG_pyrmont=true
+    CONFIG_metrics-enabled=true
     ```
 
 _Additionally, the content of the YAML configuration file can either be pregenerated and mounted into a container instance:_
 
 ```bash
 $ cat custom-config.yml
-mainnet: true
-datadir: "/mnt/data"
-http-web3provider: "https://mainnet.infura.io/v3/YOUR-PROJECT-ID"
+network: mainnet
+data-path: "/mnt/data"
+eth1-endpoint: "https://mainnet.infura.io/v3/YOUR-PROJECT-ID"
 
 # mount custom config into container
-$ docker run --mount type=bind,source="$(pwd)"/custom-config.yml,target=/tmp/config.yml 0labs/prysm:latest beacon-chain --config-file /tmp/config.yml
+$ docker run --mount type=bind,source="$(pwd)"/custom-config.yml,target=/tmp/config.yml 0labs/teku:latest teku --config-file /tmp/config.yml
 ```
 
 _...or developed from both a mounted config and injected environment variables (with envvars taking precedence and overriding mounted config settings):_
 
 ```bash
 $ cat custom-config.yml
-mainnet: true
-datadir: "/mnt/data"
-http-web3provider: "https://mainnet.infura.io/v3/YOUR-PROJECT-ID"
+network: mainnet
+data-path: "/mnt/data"
+eth1-endpoint: "https://mainnet.infura.io/v3/YOUR-PROJECT-ID"
 
 # mount custom config into container
-$ docker run -it --env PRYSM_CONFIG_DIR=/tmp/prysm --env CONFIG_datadir=/new/data/dir --env CONFIG_accept-terms-of-use=true \
-  --mount type=bind,source="$(pwd)"/custom-config.yml,target=/tmp/prysm/config.yml \
-  0labs/prysm:latest beacon-chain --config /tmp/prysm/config.yml
+$ docker run -it --env TEKU_CONFIG_DIR=/tmp/teku --env CONFIG_eth1-endpoint=http://localhost:8545 --env CONFIG_data-path=/custom/data \
+  --mount type=bind,source="$(pwd)"/custom-config.yml,target=/tmp/teku/config.yml \
+  0labs/teku:latest teku --config /tmp/teku/config.yml
 ```
 
-_Moreover, see [here](https://docs.prylabs.network/docs/prysm-usage/parameters/) for a list of supported flags to set as runtime command-line flags._
+_Moreover, see [here](https://docs.teku.consensys.net/en/latest/Reference/CLI/CLI-Syntax/#teku-command-line) for a list of supported flags to set as runtime command-line flags._
 
 ```bash
-# connect to Prater Eth2 testnet and automatically accept the terms of use agreement 
-docker run 0labs/prysm:latest beacon-chain --prater --accept-terms-of-use
+# connect to Prater Eth2 testnet and enable the REST API service
+docker run 0labs/teku:latest teku --network=prater --rest-api-enabled=true
 ```
 
 **Also, note:** as indicated in the linked documentation, CLI flags generally translate into configuration settings by removing the preceding `--` flag marker.
@@ -111,32 +110,28 @@ _...and reference below for network/chain identification and communication confi
 
 ###### port mappings
 
-| Port  | mapping description | type | config setting | command-line flag |
-| :-------------: | :-------------: | :-------------: | :-------------: | :-------------: |
-| `13000`    | The port used by libp2p | *TCP*  | `p2p-tcp-port` | `--p2p-tcp-port` |
-| `12000`    | The port used by discv5 | *UDP*  | `p2p-udp-port` | `--p2p-udp-port` |
-| `4000`    | RPC port exposed by a beacon node | *TCP*  | `rpc-port` | `--rpc-port` |
-| `3500`    | The port on which the gateway server runs on | *TCP*  | `grpc-gateway-port` | `--grpc-gateway-port` |
-| `8080`    | Port used to listen and respond to beacon node metrics request for Prometheus | *TCP*  | `monitoring-port` | `--monitoring-port` |
-| `7500`    | Enable gRPC gateway for validator JSON requests | *TCP*  | `grpc-gateway-port` | `--grpc-gateway-port ` |
-| `7000`    | RPC port exposed by a validator client | *TCP*  | `rpc-port` | `--rpc-port` |
-| `8081`    | Port used to listen and respond to validator metrics request for Prometheus | *TCP*  | `monitoring-port` | `--monitoring-port` |
+| Port  | mapping description | type | config setting | command-line flag | environment variable |
+| :-------------: | :-------------: | :-------------: | :-------------: | :-------------: | :-------------: |
+| `9000`    | The port used for p2p communication | *TCP*  | `p2p-port` | `--p2p-port` | TEKU_P2P_PORT |
+| `9000`    | The port used by discv5 for p2p discovery | *UDP*  | `p2p-udp-port` | `--p2p-udp-port` | TEKU_P2P_UDP_PORT
+| `5051`    | REST API listening | *TCP*  | `rest-api-port` | `--rest-api-port` | TEKU_REST_API_PORT |
+| `8008`    | Prometheus metrics collection | *TCP*  | `metrics-port` | `--metrics-port` | TEKU_METRICS_PORT |
 
 ###### chain id mappings
 
-| name | config setting (Eth : NetworkId) | command-line flag |
+| name | config setting (eth1-endpoint) | command-line flag |
 | :---: | :---: | :---: |
-| Mainnet | 1 | `--mainnet` |
-| Goerli | 5 | `--goerli` |
+| Mainnet | <mainnet-url> | `--eth1-endpoint=<mainnet-url>` |
+| Goerli | <goerli-url> | `--eth1-endpont=<goerli-url>` |
 
-**note:** only Eth1 web3 providers connected to either Mainnet or the Goerli testnet are supported currently.
+**note:** only Eth1 endpoints connected to either Mainnet or the Goerli testnet are supported currently.
 
 see [chainlist.org](https://chainlist.org/) for a complete list
 
 
 #### Operations
 
-:flashlight: To assist with managing a `prysm` client and interfacing with the *Ethereum 2.0* network, the following utility functions have been included within the image. *Note:* all tool command-line flags can alternatively be expressed as container runtime environment variables, as described below.
+:flashlight: To assist with managing a `teku` client and interfacing with the *Ethereum 2.0* network, the following utility functions have been included within the image. *Note:* all tool command-line flags can alternatively be expressed as container runtime environment variables, as described below.
 
 ##### Setup deposit accounts and tooling
 
@@ -173,95 +168,31 @@ ls /var/tmp/deposit/validator_keys
   deposit_data-1632777614.json  keystore-m_12381_3600_0_0_0-1632777613.json
 ```
 
+##### Query RESTful HTTP API
 
-##### Backup beacon-chain node or validator databases
-
-Backup node chain and validator databases using the `/db/backup` API.
-
-```
-$ prysm-helper status backup-db --help
-Usage: prysm-helper status backup-db [OPTIONS]
-
-  Backup Prysm beacon-chain node or validator databases (see for details:
-  https://docs.prylabs.network/docs/prysm-usage/database-backups/)
-
-Options:
-  --host-addr TEXT  Prysm Eth2 metrics host address in format
-                    <protocol(http/https)>://<IP>:<port>  [default:
-                    (http://localhost:8080)]
-  --help            Show this message and exit.
-```
-
-`$BACKUP_HOST_ADDR=<url>` (**default**: `http://localhost:8080`)
-- Prysm Eth2 metrics host address in format <protocol(http/https)>://<IP>:<port>
-
-`$AUTO_BACKUP_DB=<boolean>` (**default**: `false`)
-- whether to automatically execute database backups based on `$BACKUP_INTERVAL`
-
-`$BACKUP_INTERVAL=<cron-schedule>` (**default**: `0 */6 * * * (every 6 hours)`)
-- database backup frequency based on a cron schedule
-
-
-##### Import beacon-chain or validator node database backup
-
-Import backed-up database to designated container/host data location.
+Execute a RESTful HTTP API request.
 
 ```
-$ prysm-helper status import-db-backup --help
-Usage: prysm-helper status import-db-backup [OPTIONS]
-
-  Import Prysm beacon-chain or validator Backup Prysm beacon-chain node or
-  validator databases (see for details:
-  https://docs.prylabs.network/docs/prysm-usage/database-backups/)
-
-Options:
-  --backup-path TEXT         path of backup prysm service database  [default:
-                             (/root/.eth2/backups/)]
-  --restore-target-dir TEXT  Directory to restore imported database backup to
-                             [default: (/root/.eth2)]
-  --service TEXT             prysm service database to backup  [default:
-                             (beacon-chain)]
-  --help                     Show this message and exit.
-```
-
-`$IMPORT_BACKUP_DB=<string>` (**default**: `false`)
-- whether to automatically import a beacon-chain or validator node database on launch
-
-`$BACKUP_SERVICE=<string>` (**default**: `beacon-chain`)
-- service (beacon-chain or validator) database to backup
-
-`$BACKUP_PATH=<string>` (**default**: `/tmp/backups`)
-- path of backup Prysm service database to import
-
-`$RESTORE_DIR=<string>` (**default**: `/root/.ethereum/keystore`)
-- directory to restore imported database backup to
-
-
-##### Query Ethereum standard Beacon API
-
-Execute a RESTful Ethereum Beacon HTTP API request.
-
-```
-$ prysm-helper status api-request --help
-Usage: prysm-helper status api-request [OPTIONS]
+$ teku-helper status api-request --help
+Usage: teku-helper status api-request [OPTIONS]
 
   Execute RESTful API HTTP request
 
 Options:
-  --host-addr TEXT   Prysm Eth2 API host address in format
+  --host-addr TEXT   Teku REST API host address in format
                      <protocol(http/https)>://<IP>:<port>  [default:
-                     (http://localhost:3501)]
+                     (http://localhost:5051)]
   --api-method TEXT  HTTP method to execute a part of request  [default:
                      (GET)]
   --api-path TEXT    Restful API path to target resource  [default:
-                     (eth/v1/node/health)]
+                     (eth/v1/node/identity)]
   --api-data TEXT    Restful API request body data included within POST
                      requests  [default: ({})]
   --help             Show this message and exit.
 ```
 
 `$API_HOST_ADDR=<url>` (**default**: `localhost:3501`)
-- Prysm Eth2 API host address in format <protocol(http/https)>://<IP>:<port>
+- Teku HTTP API host address in format <protocol(http/https)>://<IP>:<port>
 
 `$API_METHOD=<http-method>` (**default**: `GET`)
 - HTTP method to execute
@@ -272,80 +203,84 @@ Options:
 `$API_DATA=<json-string>` (**default**: `'{}'`)
 - RESTful API request body data included within POST requests
 
-The output consists of a JSON blob corresponding to the expected return object for a given API query. Reference [Prysm's Ethereum Beacon API docs](https://docs.prylabs.network/docs/how-prysm-works/ethereum-public-api) for more details.
+The output consists of a JSON blob corresponding to the expected return object for a given API query. Reference [Teku's HTTP API docs](https://docs.teku.consensys.net/en/latest/Reference/Rest_API/Rest/) for more details.
 
 ###### example
 
 ```bash
-docker exec [--env API_PATH=eth/v1/node/syncing] prysm-beacon prysm-helper status api-request [--api-path eth/v1/node/syncing]
+docker exec [--env API_PATH=eth/v1/node/syncing] teku-beacon teku-helper status api-request [--api-path eth/v1/node/syncing]
 {
-  "data": {
-        "head_slot": "2315233",
+    "data": {
+        "head_slot": "2363454",
         "is_syncing": false,
-        "sync_distance": "1"
-  }
+        "sync_distance": "0"
+    }
 }
 ```
 
 ##### Import validator keystores
 
-Automatically import designated validator keystores and associated wallets on startup.
+Automatically import designated validator keystores and associated password files on startup.
 
 `$SETUP_VALIDATOR=<boolean>` (**default**: `false`)
 - whether to attempt to import validator keystores and associated wallets
 
-`$VALIDATOR_WALLET_PASSWORD=<string>` (**required**)
-- password to secure validator wallet associated with imported keystore
+`$VALIDATOR_KEY=<string>` (**required** if *validator key/password directory details are not provided*)
+- validator keystore value in json format
 
-`$VALIDATOR_ACCOUNT_PASSWORD=<string>` (**required**)
-- password to secure validator account
+`$VALIDATOR_KEY_PASSWORD=<string>` (**required** if *validator key/password directory details are not provided*)
+- validator keystore password
 
-`$VALIDATOR_KEYS_DIR=<directory>` (**default**: `/keys`)
-- Path to a directory where keystores to be imported are stored
+`$VALIDATOR_KEYS_DIR=<directory>` (**required** if *validator key/password file details are not provided*)
+- Path to a directory where validator keystores to be imported are stored
 
-`$VALIDATOR_WALLET_DIR=<directory>` (**default**: `/wallets`)
-- Path to a wallet directory within container for Prysm validator accounts
+`$VALIDATOR_PWD_DIR=<directory>` (**required** if *validator key/password file details are not provided*)
+- Path to a directory where validator keystore passwords are stored
 
-`$ETH2_CHAIN=<string>` (**default**: `pyrmont`)
-- Ethereum 2.0 chain imported keystore and wallets are associated with
+`$SECURITY_OUTPUT_DIR=<string>` (**default**: `/var/tmp/teku`)
+- directory to store secure/sensitive validator data
 
 
-All account wallets keystore/wallet details will be created at the `$VALIDATOR_WALLET_DIR`.
+Validator keystore/password files will be created at the `$SECURITY_OUTPUT_DIR` as **validator-key.json** and **key-password.txt**, respectively.
 
 ```bash
-ls /wallets/direct/accounts/
-  all-accounts.keystore.json
+ls /var/tmp/teku
+  validator-key.json  key-password.txt
 ```
+
+See [here](https://docs.teku.consensys.net/en/latest/Reference/CLI/Subcommands/Validator-Client/#validator-keys) for more details.
 
 Examples
 ----------------
 
-* Enable automatic acceptance of the terms of use when launching either a beacon-chain or validator node:
-```
-docker run --env CONFIG_accept-terms-of-use=true 0labs/prysm:latest
-```
-
-* Launch a Prysm beacon-chain node connected to the Pyrmont Ethereum 2.0 testnet using a Goerli web3 Ethereum provider:
+* Launch a Teku beacon-chain node connected to the Pyrmont Ethereum 2.0 testnet using a Goerli web3 Ethereum endpoint:
 ```
 # cat .env
-CONFIG_http-web3provider=http://ethereum-rpc.goerli.01labs.net:8545
-CONFIG_pyrmont=true
+TEKU_ETH1_ENDPOINT=http://ethereum-rpc.goerli.01labs.net:8545
+CONFIG_network=pyrmont
 
-docker run --env-file 0labs/prysm:latest
+docker run --env-file .beacon.env 0labs/teku:latest
 ```
 
-* Import Prater validator keystore and associated wallets on startup:
+* Bind-mount and customize the container node data directory:
 ```
 # cat .env
-ETH2_CHAIN=prater
-SETUP_VALIDATOR=true
-VALIDATOR_WALLET_PASSWORD=N7p3D1?!m+bA
-VALIDATOR_ACCOUNT_PASSWORD=passw0rd
-VALIDATOR_KEYS_DIR=/validator/keys
-VALIDATOR_WALLET_DIR=/validator/wallets
+CONFIG_data-path=/container/data
 
+docker run --volume /host/data:/container/data --env CONFIG_data-path=/container/data 0labs/teku:latest
+```
 
-docker run --env-file .env -v /host/validator/keys:/validator/keys 0labs/prysm:latest validator
+* Enable and expose beacon node HTTP API and metrics server on all interfaces:
+```
+# cat .env
+CONFIG_rest-api-enabled=true
+CONFIG_rest-api-interface=0.0.0.0
+CONFIG_rest-api-host-allowlist=*
+CONFIG_metrics-enabled=true
+CONFIG_metrics-interface=0.0.0.0
+CONFIG_metrics-host-allowlist=*
+
+docker run --env-file .env 0labs/teku:latest
 ```
 
 * Install Eth2 deposit CLI tool and automatically setup multiple validator accounts/keys to register on the Pyrmont testnet:
@@ -358,17 +293,17 @@ DEPOSIT_NUM_VALIDATORS=3
 ETH2_CHAIN=pyrmont
 DEPOSIT_KEY_PASSWORD=ABCabc123!@#$
 
-docker run --env-file .env 0labs/prysm:latest
+docker run --env-file .env 0labs/teku:latest
 ```
 
-* Setup automatic cron backups of a localhost beacon-chain node DB every 12 hours (or twice a day):
+* Connect teku validator client to custom beacon chain node and set validator graffiti:
 ```
 # cat .env
-AUTO_BACKUP_DB=true
-BACKUP_HOST_ADDR=http://localhost:8080
-BACKUP_INTERVAL=0 */12 * * *
+CONFIG_network=mainnet
+CONFIG_beacon-node-api-endpoint=http://teku.mainnet.01labs.net:5051
+CONFIG_validators-graffiti=O1
 
-docker run --env-file .env 0labs/prysm:latest
+docker run --env-file .env 0labs/teku:latest validator-client
 ```
 
 License

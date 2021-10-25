@@ -8,4 +8,9 @@ if [[ -d "$DIR" ]] ; then
   /bin/run-parts --exit-on-error "$DIR"
 fi
 
+# Update environment according to entrypoint logic
+if [[ -f "${SECURITY_OUTPUT_DIR:-/var/tmp/teku}/.env" ]]; then
+  source "${SECURITY_OUTPUT_DIR:-/var/tmp/teku}/.env" || true
+fi
+
 exec /usr/bin/tini -g -- "$@"

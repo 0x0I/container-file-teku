@@ -4,17 +4,17 @@
 [ -n "${DEBUG:-""}" ] && set -x
 
 if [[ "$SETUP_VALIDATOR" = "true" ]]; then
-    echo "${VALIDATOR_WALLET_PASSWORD}" > /tmp/wallet-password
-    echo "${VALIDATOR_ACCOUNT_PASSWORD}" > /tmp/account-password
+    if [ -n "${VALIDATOR_KEY+x}" ] && [ -n "${VALIDATOR_KEY_PASSWORD}" ]; then
+        key_dir="${SECURITY_OUTPUT_DIR:-/var/tmp/teku}"
+        mkdir -p $key_dir
 
-    if [ -n "${VALIDATOR_KEYS_DIR+x}" ]; then
-        keydir="${VALIDATOR_KEYS_DIR}"
-    elif [ -n "${DEPOSIT_DIR+x}" ]; then
-        keydir="${DEPOSIT_DIR}"
-    else
-        keydir="/keys"
+        echo "${VALIDATOR_KEY}" > "${key_dir}/validator-key.json"
+        echo "${VALIDATOR_KEY_PASSWORD}" > "${key_dir}/key-password.txt"
+        echo "TEKU_VALIDATOR_KEYS=${key_dir}/validator-key.json:${key_dir}/key-password.txt" >> "${key_dir}/.env"
+    elif [ -n "${VALIDATOR_KEYS_DIR+x}" ] && [ -n "${VALIDATOR_PWD_DIR}" ]; then
+        operations_dir="${SECURITY_OUTPUT_DIR:-/var/tmp/teku}"
+        mkdir -p $operations_dir
+
+        echo "TEKU_VALIDATOR_KEYS=${VALIDATOR_KEYS_DIR}:${VALIDATOR_PWD_DIR}" >> "${operations_dir}/.env"
     fi
-
-    validator accounts import --accept-terms-of-use=true --keys-dir=$keydir --wallet-dir="${VALIDATOR_WALLET_DIR:-/wallets}" \
-     "--${ETH2_CHAIN:-pyrmont}" --wallet-password-file=/tmp/wallet-password --account-password-file=/tmp/account-password
 fi
