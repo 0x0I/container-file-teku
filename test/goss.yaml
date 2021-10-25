@@ -23,6 +23,31 @@ file:
       - "eth1-endpoint: https://localhost:8545"
       - "rest-api-interface: 0.0.0.0"
       - "initial-state: http://other-node:5051/eth/v1/debug/beacon/states/finalized"
+  /mnt/secure/validator-key.json:
+    exists: true
+    mode: "0644"
+    owner: root
+    group: root
+    filetype: file
+    contains:
+      - "{\"crypto\": {}}"
+  /mnt/secure/key-password.txt:
+    exists: true
+    mode: "0644"
+    owner: root
+    group: root
+    filetype: file
+    contains:
+      - "ABCabc123!@#$"
+  /mnt/secure/.env:
+    exists: true
+    mode: "0644"
+    owner: root
+    group: root
+    filetype: file
+    contains:
+      - "TEKU_CONFIG_FILE=/etc/teku/config.yml"
+      - "TEKU_VALIDATOR_KEYS=/mnt/secure/validator-key.json:/mnt/secure/key-password.txt"
 package:
   curl:
     installed: true

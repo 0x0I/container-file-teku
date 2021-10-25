@@ -85,6 +85,12 @@ def customize(config_path):
     with open(config_path, 'w+') as f:
         yaml.dump(config_dict, f)
 
+    env_dir = os.environ.get("SECURITY_OUTPUT_DIR", "/var/tmp/teku")
+    env_file = "{dir}/.env".format(dir=env_dir)
+    execute_command("mkdir -p {dir}".format(dir=env_dir))
+    with open(env_file, 'a') as creds_env:
+        creds_env.write("export TEKU_CONFIG_FILE={path}\n".format(path=config_path))
+
 @status.command()
 @click.option('--host-addr',
               default=lambda: os.environ.get("API_HOST_ADDR", DEFAULT_API_HOST_ADDR),
