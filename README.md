@@ -59,7 +59,7 @@ _The following variables can be customized to manage the location and content of
 
     `<setting>` -- represents a YAML config setting:
     ```bash
-    # [YAML Setting 'matrics-enabled']
+    # [YAML Setting 'metrics-enabled']
     CONFIG_metrics-enabled=<value>
     ```
 
