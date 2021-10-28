@@ -17,7 +17,7 @@ or included within an environment config file located either at a `.beacon.env o
 **Optional**
 
 | var | description | default |
-| --- | :---: | :---: |
+| :---: | :---: | :---: |
 | *image* | Teku client container image to deploy | `0labs/teku:latest` |
 | *TEKU_CONFIG_DIR* | configuration directory path within container | `/etc/teku` |
 | *p2p_tcp_port* | peer-to-peer network communication and listening port | `9000` |
