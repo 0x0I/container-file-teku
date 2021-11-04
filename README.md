@@ -1,7 +1,7 @@
 <p><img src="https://avatars1.githubusercontent.com/u/12563465?s=200&v=4" alt="OCI logo" title="oci" align="left" height="70" /></p>
 <p><img src="https://pbs.twimg.com/profile_images/1324063968877563907/n-NYkVty.png" alt="teku logo" title="teku" align="right" height="80" /></p>
 
-Container File 🔰:link: Teku
+Container File 🔰🔗 Teku
 =========
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/0x0I/container-file-teku?color=yellow)
 [![0x0I](https://circleci.com/gh/0x0I/container-file-teku.svg?style=svg)](https://circleci.com/gh/0x0I/container-file-teku)
