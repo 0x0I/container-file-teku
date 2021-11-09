@@ -135,8 +135,8 @@ _...and reference below for network/chain identification and communication confi
 
 | name | config setting (eth1-endpoint) | command-line flag |
 | :---: | :---: | :---: |
-| Mainnet | <mainnet-url> | `--eth1-endpoint=<mainnet-url>` |
-| Goerli | <goerli-url> | `--eth1-endpont=<goerli-url>` |
+| Mainnet | {mainnet-url} | `--eth1-endpoint={mainnet-url}` |
+| Goerli | {goerli-url} | `--eth1-endpont={goerli-url}` |
 
 **note:** only Eth1 endpoints connected to either Mainnet or the Goerli testnet are supported currently.
 
