@@ -279,8 +279,6 @@ docker run --env-file .beacon.env 0labs/teku:latest
 * Bind-mount and customize the container node data directory:
 ```
 # cat .env
-CONFIG_data-path=/container/data
-
 docker run --volume /host/data:/container/data --env CONFIG_data-path=/container/data 0labs/teku:latest
 ```
 
