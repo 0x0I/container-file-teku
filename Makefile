@@ -11,16 +11,18 @@ test:
 	DOCKER_BUILDKIT=1 docker build --tag teku:test --target test --build-arg build_type=$(build_type) --build-arg teku_version=$(version) . && docker run --env-file test/test.env teku:test
 
 test-compose-beacon:
-	cd compose && docker-compose config && image=$(image_repo):$(version) docker-compose up -d teku-beacon && \
-	sleep 90 && docker-compose logs 2>&1 | grep "Loaded initial state" && \
+	echo "image=${image_repo}:${version}" > compose/.env-test
+	cd compose && docker-compose --env-file .env-test config && docker-compose --env-file .env-test up -d teku-beacon && \
+	sleep 120 && docker-compose logs 2>&1 | grep "Loaded initial state" && \
 	docker-compose logs 2>&1 | grep "Syncing started" && \
 	docker-compose logs 2>&1 | grep "Successfully loaded deposits" && \
-	docker-compose down
+	docker-compose down && rm .env-test
 
 test-compose-validator:
-	cd compose && docker-compose config && image=$(image_repo):$(version) docker-compose up -d && \
+	echo "image=${image_repo}:${version}" > compose/.env-test
+	cd compose && docker-compose --env-file .env-test config && docker-compose --env-file .env-test up -d && \
 	sleep 30 && docker-compose logs teku-validator 2>&1 | grep "Successfully connected to beacon chain event stream" && \
-	docker-compose down
+	docker-compose down && rm .env-test
 
 release:
 	DOCKER_BUILDKIT=1 docker build --tag $(image_repo):$(version) --target release --build-arg build_type=$(build_type) --build-arg teku_version=$(version) .
