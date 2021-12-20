@@ -13,7 +13,7 @@ test:
 test-compose-beacon:
 	echo "image=${image_repo}:${version}" > compose/.env-test
 	cd compose && docker-compose --env-file .env-test config && docker-compose --env-file .env-test up -d teku-beacon && \
-	sleep 90 && docker-compose logs 2>&1 | grep "Loaded initial state" && \
+	sleep 120 && docker-compose logs 2>&1 | grep "Loaded initial state" && \
 	docker-compose logs 2>&1 | grep "Syncing started" && \
 	docker-compose logs 2>&1 | grep "Successfully loaded deposits" && \
 	docker-compose down && rm .env-test
