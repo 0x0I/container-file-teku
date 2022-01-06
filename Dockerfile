@@ -72,7 +72,7 @@ CMD ["goss", "--gossfile", "/test/goss.yaml", "validate"]
 # ******* Stage: release ******* #
 FROM base as release
 
-ARG version=0.1.0
+ARG version=0.1.1
 
 ENV PATH="/usr/local/teku/bin:${PATH}"
 

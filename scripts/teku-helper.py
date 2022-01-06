@@ -82,14 +82,18 @@ def customize(config_path):
                 value = False
             config_dict[config_setting] = value
 
-    with open(config_path, 'w+') as f:
-        yaml.dump(config_dict, f)
+    # export config dictionary settings to designated config path
+    if config_dict:
+        with open(config_path, 'w+') as f:
+            yaml.dump(config_dict, f)
 
-    env_dir = os.environ.get("SECURITY_OUTPUT_DIR", "/var/tmp/teku")
-    env_file = "{dir}/.env".format(dir=env_dir)
-    execute_command("mkdir -p {dir}".format(dir=env_dir))
-    with open(env_file, 'a') as creds_env:
-        creds_env.write("export TEKU_CONFIG_FILE={path}\n".format(path=config_path))
+    # only set TEKU config file envvar if config file is mounted or generated
+    if os.path.isfile(config_path):
+        env_dir = os.environ.get("SECURITY_OUTPUT_DIR", "/var/tmp/teku")
+        env_file = "{dir}/.env".format(dir=env_dir)
+        execute_command("mkdir -p {dir}".format(dir=env_dir))
+        with open(env_file, 'a') as creds_env:
+            creds_env.write("export TEKU_CONFIG_FILE={path}\n".format(path=config_path))
 
 @status.command()
 @click.option('--host-addr',
