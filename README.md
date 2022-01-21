@@ -120,6 +120,13 @@ docker run 0labs/teku:latest teku --network=prater --rest-api-enabled=true
 
 **Also, note:** as indicated in the linked documentation, CLI flags generally translate into configuration settings by removing the preceding `--` flag marker.
 
+`$EXTRA_ARGS=<string>` (**default**: `''`)
+- space separated list of command-line flags to pass at run-time
+
+  ```bash
+  docker run --env EXTRA_ARGS="--metrics-enabled=true --metrics-interface=0.0.0.0" 0labs/teku:latest
+  ```
+
 _...and reference below for network/chain identification and communication configs:_ 
 
 ###### port mappings
