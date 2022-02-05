@@ -67,6 +67,8 @@ WORKDIR /test
 
 COPY test /test
 
+ENV NOLOAD_CONFIG=1
+
 CMD ["goss", "--gossfile", "/test/goss.yaml", "validate"]
 
 # ******* Stage: release ******* #
