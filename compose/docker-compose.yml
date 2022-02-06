@@ -9,8 +9,6 @@ services:
     container_name: teku-beacon
     command:
       - "teku"
-      - "--config-file"
-      - "${TEKU_CONFIG_DIR:-/etc/teku}/config.yml"
     environment:
       TEKU_CONFIG_DIR:
     env_file:
@@ -32,8 +30,6 @@ services:
     command:
       - "teku"
       - "validator-client"
-      - "--config-file"
-      - "${TEKU_CONFIG_DIR:-/etc/teku}/config.yml"
     environment:
       PRYSM_CONFIG_DIR:
     env_file:
