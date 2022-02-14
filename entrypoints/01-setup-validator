@@ -8,9 +8,23 @@ if [[ "$SETUP_VALIDATOR" = "true" ]]; then
         key_dir="${SECURITY_OUTPUT_DIR:-/var/tmp/teku}"
         mkdir -p $key_dir
 
-        echo "${VALIDATOR_KEY}" > "${key_dir}/validator-key.json"
-        echo "${VALIDATOR_KEY_PASSWORD}" > "${key_dir}/key-password.txt"
-        echo "TEKU_VALIDATOR_KEYS=${key_dir}/validator-key.json:${key_dir}/key-password.txt" >> "${key_dir}/.env"
+        # if validator key is expressed as local file, use as defined; otherwise generate file accordingly
+        if [[ -f "${VALIDATOR_KEY}" ]]; then
+            key_file="${VALIDATOR_KEY}"
+        else
+            echo "${VALIDATOR_KEY}" > "${key_dir}/validator-key.json"
+            key_file="${key_dir}/validator-key.json"
+        fi
+
+        # if validator password is expressed as local file, use as defined; otherwise generate file accordingly
+        if [[ -f "${VALIDATOR_KEY_PASSWORD}" ]]; then
+            pwd_file="${VALIDATOR_KEY_PASSWORD}"
+        else
+            echo "${VALIDATOR_KEY_PASSWORD}" > "${key_dir}/key-password.txt"
+            pwd_file="${key_dir}/key-password.txt"
+        fi
+        
+        echo "TEKU_VALIDATOR_KEYS=${key_file}:${pwd_file}" >> "${key_dir}/.env"
     elif [ -n "${VALIDATOR_KEYS_DIR+x}" ] && [ -n "${VALIDATOR_PWD_DIR}" ]; then
         operations_dir="${SECURITY_OUTPUT_DIR:-/var/tmp/teku}"
         mkdir -p $operations_dir
